@@ -38,3 +38,9 @@ print("all doamins",len(list_of_subdomains))
 uniq_subdomains = set(list_of_subdomains)
 print("Unique Domains",len(uniq_subdomains))
 
+# Writing to file 
+file_name = "cert.sh_{}.txt".format(domain)
+with open(file_name, "w") as file1: 
+    # Writing data to a file 
+    for sub_doamin in uniq_subdomains:
+        file1.write(str(sub_doamin)+'\n')
