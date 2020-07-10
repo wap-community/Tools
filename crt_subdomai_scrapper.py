@@ -35,3 +35,6 @@ list_of_subdomains = string_data.split(',')
 #all doamins
 print("all doamins",len(list_of_subdomains))
 
+uniq_subdomains = set(list_of_subdomains)
+print("Unique Domains",len(uniq_subdomains))
+
