@@ -21,3 +21,10 @@ fifth_columns = []
 for row in rows[1:]:
     fifth_columns.append(str(row.findAll('td')[4]))
 
+clean_data = []
+
+for data in fifth_columns:
+    remove_td = data.replace("<td>","").replace('</td>', ',')
+    add_comma_br = remove_td.replace("<br>",",").replace('<br/>', ',').replace('*.','')
+    clean_data.append(add_comma_br)
+
