@@ -28,3 +28,10 @@ for data in fifth_columns:
     add_comma_br = remove_td.replace("<br>",",").replace('<br/>', ',').replace('*.','')
     clean_data.append(add_comma_br)
 
+string_data = "".join(clean_data)
+
+list_of_subdomains = string_data.split(',')
+
+#all doamins
+print("all doamins",len(list_of_subdomains))
+
