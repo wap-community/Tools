@@ -69,7 +69,7 @@ def find_subdomains_censys(domain, api_id, api_secret):
         return set(subdomains)
 
 ## get unique subdomains
-def get_unique_subdomains(subdomains_list):
+def get_unique_subdomains():
     pass
 
 
@@ -105,9 +105,9 @@ def main(domain, censys_api_id, censys_api_secret):
     cert_domains = find_subdomains_cert(domain)
     censys_subdomains = find_subdomains_censys(domain, censys_api_id, censys_api_secret)
 
-    subdomains = get_unique_subdomains()
-
-    save_subdomains_to_file("all_subdomains",domain,subdomains)
+    uniq_subdomains = cert_domains | censys_subdomains
+   
+    save_subdomains_to_file("all_subdomains",domain,uniq_subdomains)
 
 
 if __name__ == "__main__":
