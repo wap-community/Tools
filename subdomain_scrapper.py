@@ -16,6 +16,8 @@ import censys
 
 def find_subdomains_cert(domain):
 
+    print('[*] Searching Cert for subdomains of %s' % domain)
+
     URL = 'https://crt.sh/?q={}'.format(domain)
     page = requests.get(URL)
     soup = BeautifulSoup(page.content, 'html.parser')
@@ -36,11 +38,12 @@ def find_subdomains_cert(domain):
     string_data = "".join(clean_data)
 
     list_of_subdomains = string_data.split(',')
-
+    print('[*] DONE Searching Cert for subdomains of %s' % domain)
     return(set(list_of_subdomains))
 
 
 def find_subdomains_censys(domain, api_id, api_secret):
+    print('[*] Searching Censys for subdomains of %s' % domain)
     try:
         censys_certificates = censys.certificates.CensysCertificates(api_id=api_id, api_secret=api_secret)
         certificate_query = 'parsed.names: %s' % domain
@@ -51,6 +54,7 @@ def find_subdomains_censys(domain, api_id, api_secret):
         for search_result in certificates_search_results:
             subdomains.extend(search_result['parsed.names'])
 		
+        print('[*] DONE Searching Censys for subdomains of %s' % domain)
         return set(subdomains)
 
     except censys.base.CensysUnauthorizedException:
@@ -64,30 +68,51 @@ def find_subdomains_censys(domain, api_id, api_secret):
         sys.stderr.write('[-] Something bad happened, ' + repr(e))
         return set(subdomains)
 
+## get unique subdomains
+def get_unique_subdomains(subdomains_list):
+    pass
+
+
 # # Writing to file 
 def save_subdomains_to_file(name,domain,subdomains):
-    file_name = "{}.txt".format(name)
-    with open(file_name, "w") as file1: 
-        # Writing data to a file 
-        for sub_doamin in uniq_subdomains:
-            file1.write(str(sub_doamin)+'\n')
+    print('\n[*] Saving %s subdomains into file' % name)
 
+    parent_dir = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(parent_dir, 'outputs/')
+    try:
+        if(not os.path.exists('outputs/')):
+            os.mkdir(path)
+            if(not os.path.exists('outputs/'+domain)):
+                os.mkdir(path+domain)
+        else:
+            if(not os.path.exists('outputs/'+domain)):
+                os.mkdir(path+domain)
+    except:
+        pass
+
+    file_name = "{}/{}.txt".format(domain,name)
+    filepath = os.path.join(path,file_name)
+
+    with open(filepath, "w") as file1: 
+        # Writing data to a file 
+        for subdomain in subdomains:
+            file1.write(str(subdomain)+'\n')
+
+    print('[*] Saving %s Done' % name)
 
 def main(domain, censys_api_id, censys_api_secret):
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    print(BASE_DIR)
    
     cert_domains = find_subdomains_cert(domain)
     censys_subdomains = find_subdomains_censys(domain, censys_api_id, censys_api_secret)
 
-    save_subdomains_to_file("cert",domain,cert_domains)
-    save_subdomains_to_file("censys",domain,cert_domains)
+    subdomains = get_unique_subdomains()
+
+    save_subdomains_to_file("all_subdomains",domain,subdomains)
 
 
 if __name__ == "__main__":
 
     domain = sys.argv[1]
-    print(domain)
 
     censys_api_id = None
     censys_api_secret = None
