@@ -7,11 +7,17 @@ import requests
 from bs4 import BeautifulSoup
 import sys
 import os
+import json
+from termcolor import colored
+
 
 #censys
 import censys.certificates
 import censys.ipv4
 import censys
+
+#shodan
+import shodan
 
 
 def find_subdomains_cert(domain):
@@ -68,6 +74,41 @@ def find_subdomains_censys(domain, api_id, api_secret):
         sys.stderr.write('[-] Something bad happened, ' + repr(e))
         return set(subdomains)
 
+
+def find_subdomains_shodan(domain, shodan_api):
+	SD = [] 
+	api = shodan.Shodan(shodan_api)
+
+	if shodan_api == "":
+		print("  \__", colored("No Shodan API key configured", "red"))
+		return []
+
+	else:
+		try:
+			results = api.search("hostname:.{0}".format(domain))
+			print(results)
+			try:
+				for res in results["matches"]:
+					SD.append("".join(res["hostnames"]))
+
+			except KeyError as errk:
+				print("  \__", colored(errk, "red"))
+				return []
+
+			SD = set(SD)
+
+			print("  \__ {0}: {1}".format(colored("Unique subdomains found", "cyan"), colored(len(SD), "yellow")))
+			return SD
+
+		except shodan.exception.APIError as err:
+			print("  \__", colored(err, "red"))
+			return []
+
+		except Exception:
+			print("  \__", colored("Something went wrong!", "red"))
+			return []
+
+
 ## get unique subdomains
 def get_unique_subdomains():
     pass
@@ -104,6 +145,8 @@ def main(domain, censys_api_id, censys_api_secret):
    
     cert_domains = find_subdomains_cert(domain)
     censys_subdomains = find_subdomains_censys(domain, censys_api_id, censys_api_secret)
+    # shodan_subdoains = find_subdomains_shodan(domain, shodan_api)
+
 
     uniq_subdomains = cert_domains | censys_subdomains
    
@@ -116,14 +159,16 @@ if __name__ == "__main__":
 
     censys_api_id = None
     censys_api_secret = None
+    # shodan_api = None
 
     if 'CENSYS_API_ID' in os.environ and 'CENSYS_API_SECRET' in os.environ:
         censys_api_id = os.environ['CENSYS_API_ID']
         censys_api_secret = os.environ['CENSYS_API_SECRET']
+        # shodan_api = os.environ['SHODAN_API']
 
 
     if None in [ censys_api_id, censys_api_secret ]:
-        sys.stderr.write('[!] Please set your Censys API ID and secret from your environment (CENSYS_API_ID and CENSYS_API_SECRET) or from the command line.\n')
+        sys.stderr.write('[!] Please set your \n 1. Censys API ID and Censys Secret from your environment \n 2. Set this (CENSYS_API_ID and CENSYS_API_SECRET and SHODAN_API) variables\n using export VARIABLENAME="value" \n')
         exit(1)
-		
+
     main(domain, censys_api_id, censys_api_secret)
