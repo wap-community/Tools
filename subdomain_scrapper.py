@@ -8,9 +8,12 @@ from bs4 import BeautifulSoup
 import sys
 import os
 import json
+from json import loads
 from termcolor import colored
 from re import findall
 from urllib.parse import quote
+from urllib.parse import urlparse
+
 
 #censys
 import censys.certificates
@@ -195,7 +198,7 @@ def main(domain, censys_api_id, censys_api_secret):
     # cert_subdomains = find_subdomains_cert(domain)
     # censys_subdomains = find_subdomains_censys(domain, censys_api_id, censys_api_secret)
     # hacker_target_subdomains = find_subdomains_hacker_target(domain)
-    threat_crowd_subdomains = find_subdomains_threat_crowd(domain)
+    # threat_crowd_subdomains = find_subdomains_threat_crowd(domain)
 
     # uniq_subdomains = cert_subdomains | censys_subdomains | hacker_target_subdomains | threat_crowd_subdomains
    
