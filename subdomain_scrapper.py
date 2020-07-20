@@ -9,7 +9,8 @@ import sys
 import os
 import json
 from termcolor import colored
-
+from re import findall
+from urllib.parse import quote
 
 #censys
 import censys.certificates
@@ -59,7 +60,7 @@ def find_subdomains_censys(domain, api_id, api_secret):
         subdomains = []
         for search_result in certificates_search_results:
             subdomains.extend(search_result['parsed.names'])
-		
+        
         print('[*] DONE Searching Censys for subdomains of %s' % domain)
         return set(subdomains)
 
@@ -76,38 +77,136 @@ def find_subdomains_censys(domain, api_id, api_secret):
 
 
 def find_subdomains_shodan(domain, shodan_api):
-	SD = [] 
-	api = shodan.Shodan(shodan_api)
+    SD = [] 
+    api = shodan.Shodan(shodan_api)
 
-	if shodan_api == "":
-		print("  \__", colored("No Shodan API key configured", "red"))
-		return []
+    if shodan_api == "":
+        print("  \__", colored("No Shodan API key configured", "red"))
+        return []
 
-	else:
-		try:
-			results = api.search("hostname:.{0}".format(domain))
-			print(results)
-			try:
-				for res in results["matches"]:
-					SD.append("".join(res["hostnames"]))
+    else:
+        try:
+            results = api.search("hostname:.{0}".format(domain))
+            print(results)
+            try:
+                for res in results["matches"]:
+                    SD.append("".join(res["hostnames"]))
 
-			except KeyError as errk:
-				print("  \__", colored(errk, "red"))
-				return []
+            except KeyError as errk:
+                print("  \__", colored(errk, "red"))
+                return []
 
-			SD = set(SD)
+            SD = set(SD)
 
-			print("  \__ {0}: {1}".format(colored("Unique subdomains found", "cyan"), colored(len(SD), "yellow")))
-			return SD
+            print("  \__ {0}: {1}".format(colored("Unique subdomains found", "cyan"), colored(len(SD), "yellow")))
+            return SD
 
-		except shodan.exception.APIError as err:
-			print("  \__", colored(err, "red"))
-			return []
+        except shodan.exception.APIError as err:
+            print("  \__", colored(err, "red"))
+            return []
 
-		except Exception:
-			print("  \__", colored("Something went wrong!", "red"))
-			return []
+        except Exception:
+            print("  \__", colored("Something went wrong!", "red"))
+            return []
 
+def hacker_target(doamin):
+    HT = []
+
+    print(colored("[*]-Searching HackerTarget...", "yellow"))
+
+    url = "https://api.hackertarget.com/hostsearch/?q={0}".format(quote(domain))
+    headers = {"user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:52.0) Gecko/20100101 Firefox/52.0"}
+
+    try:
+        response = requests.get(url, headers=headers).text
+        hostnames = [result.split(",")[0] for result in response.split("\n")]
+
+        for hostname in hostnames:
+            if hostname:
+                HT.append(hostname)
+
+        HT = set(HT)
+        print(HT)
+        print("  \__ {0}: {1}".format(colored("Unique subdomains found", "cyan"), colored(len(HT), "yellow")))
+        return HT
+
+    except requests.exceptions.RequestException as err:
+        print("  \__", colored(err, "red"))
+        return []
+
+    except requests.exceptions.HTTPError as errh:
+        print("  \__", colored(errh, "red"))
+        return []
+
+    except requests.exceptions.ConnectionError as errc:
+        print("  \__", colored(errc, "red"))
+        return []
+
+    except requests.exceptions.Timeout as errt:
+        print("  \__", colored(errt, "red"))
+        return []
+
+    except Exception:
+        print("  \__", colored("Something went wrong!", "red"))
+        return []
+
+        
+def cert_spotter_parseResponse(response, domain):
+    hostnameRegex = "([\w\.\-]+\.%s)" % (domain.replace(".", "\."))
+    hosts = findall(hostnameRegex, str(response))
+
+    return [host.lstrip(".") for host in hosts]
+
+def find_subdomains_cert_spotter(domain):
+    CS = []
+
+    print(colored("[*]-Searching CertSpotter...", "yellow"))
+
+    base_url = "https://api.certspotter.com"
+    next_link = "/v1/issuances?domain={0}&include_subdomains=true&expand=dns_names".format(domain)
+    # headers = {"user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:52.0) Gecko/20100101 Firefox/52.0"}
+
+    while next_link:
+        try:
+            response = requests.get(base_url + next_link)
+
+            if response.status_code == 429:
+                print("  \__", colored("Search rate limit exceeded.", "red"))
+                return []
+
+            CS += cert_spotter_parseResponse(response.content, domain)
+
+            try:
+                next_link = response.headers["Link"].split(";")[0][1:-1]
+
+            except KeyError:
+                break
+
+        except requests.exceptions.RequestException as err:
+            print("  \__", colored(err, "red"))
+            return []
+
+        except requests.exceptions.HTTPError as errh:
+            print("  \__", colored(errh, "red"))
+            return []
+
+        except requests.exceptions.ConnectionError as errc:
+            print("  \__", colored(errc, "red"))
+            return []
+
+        except requests.exceptions.Timeout as errt:
+            print("  \__", colored(errt, "red"))
+            return []
+
+        except Exception:
+            print("  \__", colored("Something went wrong!", "red"))
+            return []
+
+    CS = set(CS)
+
+    print("  \__ {0}: {1}".format(colored("Unique subdomains found", "cyan"), colored(len(CS), "yellow")))
+    print(CS)
+    return CS
 
 ## get unique subdomains
 def get_unique_subdomains():
@@ -143,14 +242,14 @@ def save_subdomains_to_file(name,domain,subdomains):
 
 def main(domain, censys_api_id, censys_api_secret):
    
-    cert_domains = find_subdomains_cert(domain)
-    censys_subdomains = find_subdomains_censys(domain, censys_api_id, censys_api_secret)
-    # shodan_subdoains = find_subdomains_shodan(domain, shodan_api)
-
-
-    uniq_subdomains = cert_domains | censys_subdomains
+    # cert_subdomains = find_subdomains_cert(domain)
+    # censys_subdomains = find_subdomains_censys(domain, censys_api_id, censys_api_secret)
+    # shodan_subdomains = find_subdomains_shodan(domain, shodan_api)
+    # cert_spotter_subdomains = find_subdomains_cert_spotter(domain)
+    hacker_target(domain)
+    # uniq_subdomains = cert_subdomains | censys_subdomains
    
-    save_subdomains_to_file("all_subdomains",domain,uniq_subdomains)
+    # save_subdomains_to_file("all_subdomains",domain,uniq_subdomains)
 
 
 if __name__ == "__main__":
