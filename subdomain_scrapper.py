@@ -118,6 +118,51 @@ def hacker_target(doamin):
         return []
 
 
+def find_subdomains_threat_crowd(domain):
+    TC = []
+
+    print(colored("[*]-Searching ThreatCrowd...", "yellow"))
+
+    try:
+        result = requests.get("https://www.threatcrowd.org/searchApi/v2/domain/report/", params={"domain": domain})
+
+        try:
+            RES = json.loads(result.text)
+            resp_code = int(RES["response_code"])
+
+            if resp_code == 1:
+                for sd in RES["subdomains"]:
+                    TC.append(sd)
+
+            TC = set(TC)
+            print("  \__ {0}: {1}".format(colored("Unique subdomains found", "cyan"), colored(len(TC), "yellow")))
+            return TC
+
+        except ValueError as errv:
+            print("  \__", colored(errv, "red"))
+            return []
+
+    except requests.exceptions.RequestException as err:
+        print("  \__", colored(err, "red"))
+        return []
+
+    except requests.exceptions.HTTPError as errh:
+        print("  \__", colored(errh, "red"))
+        return []
+
+    except requests.exceptions.ConnectionError as errc:
+        print("  \__", colored(errc, "red"))
+        return []
+
+    except requests.exceptions.Timeout as errt:
+        print("  \__", colored(errt, "red"))
+        return []
+
+    except Exception:
+        print("  \__", colored("Something went wrong!", "red"))
+        return []
+
+
 # # Writing to file 
 def save_subdomains_to_file(name,domain,subdomains):
     print('\n[*] Saving %s subdomains into file' % name)
@@ -149,8 +194,10 @@ def main(domain, censys_api_id, censys_api_secret):
    
     # cert_subdomains = find_subdomains_cert(domain)
     # censys_subdomains = find_subdomains_censys(domain, censys_api_id, censys_api_secret)
-    hacker_target_subdomains = hacker_target(domain)
-    # uniq_subdomains = cert_subdomains | censys_subdomains | hacker_target_subdomains
+    # hacker_target_subdomains = find_subdomains_hacker_target(domain)
+    threat_crowd_subdomains = find_subdomains_threat_crowd(domain)
+
+    # uniq_subdomains = cert_subdomains | censys_subdomains | hacker_target_subdomains | threat_crowd_subdomains
    
     # save_subdomains_to_file("all_subdomains",domain,uniq_subdomains)
 
