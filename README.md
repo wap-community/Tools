@@ -17,6 +17,7 @@ The tool is collecting data from the following services:
  * Stores all the unique subdomains into a file inside the folder with the name of the domain.
 
 ## Demo
+[![Tool Working Demo](https://img.youtube.com/vi/4thNDNLRat0/0.jpg)](https://www.youtube.com/watch?v=4thNDNLRat0)
 
 ## Dependencies
 `python3`
