@@ -1,8 +1,3 @@
-'''
-websites --> https://crt.sh/
-         --> https://censys.io/
-'''
-
 import requests
 from bs4 import BeautifulSoup
 import sys
@@ -26,7 +21,7 @@ import shodan
 
 def find_subdomains_cert(domain):
 
-    print('[*] Searching Cert for subdomains of %s' % domain)
+    print(colored('[*] Searching Cert for subdomains of %s' % domain,"yellow"))
 
     URL = 'https://crt.sh/?q={}'.format(domain)
     page = requests.get(URL)
@@ -48,13 +43,12 @@ def find_subdomains_cert(domain):
     string_data = "".join(clean_data)
 
     list_of_subdomains = string_data.split(',')
-    print('[*] DONE Searching Cert for subdomains of %s' % domain)
     print("[*] {0}: {1}".format(colored("Unique subdomains found", "cyan"), colored(len(set(list_of_subdomains)), "yellow")))
     return(set(list_of_subdomains))
 
 
 def find_subdomains_censys(domain, api_id, api_secret):
-    print('[*] Searching Censys for subdomains of %s' % domain)
+    print(colored('[*] Searching Censys for subdomains of %s' % domain,"yellow"))
     try:
         censys_certificates = censys.certificates.CensysCertificates(api_id=api_id, api_secret=api_secret)
         certificate_query = 'parsed.names: %s' % domain
@@ -65,7 +59,6 @@ def find_subdomains_censys(domain, api_id, api_secret):
         for search_result in certificates_search_results:
             subdomains.extend(search_result['parsed.names'])
         
-        print('[*] DONE Searching Censys for subdomains of %s' % domain)
         print("[*] {0}: {1}".format(colored("Unique subdomains found", "cyan"), colored(len(set(subdomains)), "yellow")))
         return set(subdomains)
 
@@ -97,27 +90,27 @@ def hacker_target(doamin):
                 HT.append(hostname)
 
         HT = set(HT)
-        print("  \__ {0}: {1}".format(colored("Unique subdomains found", "cyan"), colored(len(HT), "yellow")))
+        print(" [*] {0}: {1}".format(colored("Unique subdomains found", "cyan"), colored(len(HT), "yellow")))
         return HT
 
     except requests.exceptions.RequestException as err:
-        print("  \__", colored(err, "red"))
+        print(" [*]", colored(err, "red"))
         return []
 
     except requests.exceptions.HTTPError as errh:
-        print("  \__", colored(errh, "red"))
+        print(" [*]", colored(errh, "red"))
         return []
 
     except requests.exceptions.ConnectionError as errc:
-        print("  \__", colored(errc, "red"))
+        print(" [*]", colored(errc, "red"))
         return []
 
     except requests.exceptions.Timeout as errt:
-        print("  \__", colored(errt, "red"))
+        print(" [*]", colored(errt, "red"))
         return []
 
     except Exception:
-        print("  \__", colored("Something went wrong!", "red"))
+        print(" [*]", colored("Something went wrong!", "red"))
         return []
 
 
@@ -138,37 +131,37 @@ def find_subdomains_threat_crowd(domain):
                     TC.append(sd)
 
             TC = set(TC)
-            print("  \__ {0}: {1}".format(colored("Unique subdomains found", "cyan"), colored(len(TC), "yellow")))
+            print(" [*] {0}: {1}".format(colored("Unique subdomains found", "cyan"), colored(len(TC), "yellow")))
             return TC
 
         except ValueError as errv:
-            print("  \__", colored(errv, "red"))
+            print(" [*]", colored(errv, "red"))
             return []
 
     except requests.exceptions.RequestException as err:
-        print("  \__", colored(err, "red"))
+        print(" [*]", colored(err, "red"))
         return []
 
     except requests.exceptions.HTTPError as errh:
-        print("  \__", colored(errh, "red"))
+        print(" [*]", colored(errh, "red"))
         return []
 
     except requests.exceptions.ConnectionError as errc:
-        print("  \__", colored(errc, "red"))
+        print(" [*]", colored(errc, "red"))
         return []
 
     except requests.exceptions.Timeout as errt:
-        print("  \__", colored(errt, "red"))
+        print(" [*]", colored(errt, "red"))
         return []
 
     except Exception:
-        print("  \__", colored("Something went wrong!", "red"))
+        print(" [*]", colored("Something went wrong!", "red"))
         return []
 
 
 # # Writing to file 
 def save_subdomains_to_file(name,domain,subdomains):
-    print('\n[*] Saving %s subdomains into file' % name)
+    print(colored('\n[*] Saving %s subdomains into file' % name,"yellow"))
 
     parent_dir = os.path.dirname(os.path.abspath(__file__))
     path = os.path.join(parent_dir, 'outputs/')
@@ -191,18 +184,18 @@ def save_subdomains_to_file(name,domain,subdomains):
         for subdomain in subdomains:
             file1.write(str(subdomain)+'\n')
 
-    print('[*] Saving %s Done' % name)
+    print(colored('[*] Saving %s Done' % name,"green"))
 
 def main(domain, censys_api_id, censys_api_secret):
    
-    # cert_subdomains = find_subdomains_cert(domain)
-    # censys_subdomains = find_subdomains_censys(domain, censys_api_id, censys_api_secret)
-    # hacker_target_subdomains = find_subdomains_hacker_target(domain)
-    # threat_crowd_subdomains = find_subdomains_threat_crowd(domain)
+    cert_subdomains = find_subdomains_cert(domain)
+    censys_subdomains = find_subdomains_censys(domain, censys_api_id, censys_api_secret)
+    hacker_target_subdomains = find_subdomains_hacker_target(domain)
+    threat_crowd_subdomains = find_subdomains_threat_crowd(domain)
 
-    # uniq_subdomains = cert_subdomains | censys_subdomains | hacker_target_subdomains | threat_crowd_subdomains
+    uniq_subdomains = cert_subdomains | censys_subdomains | hacker_target_subdomains | threat_crowd_subdomains
    
-    # save_subdomains_to_file("all_subdomains",domain,uniq_subdomains)
+    save_subdomains_to_file("all_subdomains",domain,uniq_subdomains)
 
 
 if __name__ == "__main__":
@@ -211,16 +204,16 @@ if __name__ == "__main__":
 
     censys_api_id = None
     censys_api_secret = None
-    # shodan_api = None
+
 
     if 'CENSYS_API_ID' in os.environ and 'CENSYS_API_SECRET' in os.environ:
         censys_api_id = os.environ['CENSYS_API_ID']
         censys_api_secret = os.environ['CENSYS_API_SECRET']
-        # shodan_api = os.environ['SHODAN_API']
+
 
 
     if None in [ censys_api_id, censys_api_secret ]:
-        sys.stderr.write('[!] Please set your \n 1. Censys API ID and Censys Secret from your environment \n 2. Set this (CENSYS_API_ID and CENSYS_API_SECRET and SHODAN_API) variables\n using export VARIABLENAME="value" \n')
+        sys.stderr.write('[!] Please set your \n 1. Censys API ID and Censys Secret from your environment \n 2. Set this (CENSYS_API_ID and CENSYS_API_SECRET) variables\n using export VARIABLENAME="value" \n')
         exit(1)
 
     main(domain, censys_api_id, censys_api_secret)
