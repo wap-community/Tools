@@ -11,6 +11,11 @@ The tool is collecting data from the following services:
 * [HackerTarget](https://hackertarget.com/)
 * [ThreatCrowd](https://www.threatcrowd.org/)
 
+## Features
+ * Find Subdomains from various services
+ * Filter Out Duplicates sub-domains
+ * Stores all the unique subdomains into a file inside the folder with the name of the domain.
+
 ## Demo
 
 ## Dependencies
