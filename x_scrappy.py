@@ -21,7 +21,7 @@ import shodan
 
 def find_subdomains_cert(domain):
 
-    print(colored('[*] Searching Cert for subdomains of %s' % domain,"yellow"))
+    print(colored("[*] Searching Cert...","yellow"))
 
     URL = 'https://crt.sh/?q={}'.format(domain)
     page = requests.get(URL)
@@ -43,12 +43,13 @@ def find_subdomains_cert(domain):
     string_data = "".join(clean_data)
 
     list_of_subdomains = string_data.split(',')
-    print("[*] {0}: {1}".format(colored("Unique subdomains found", "cyan"), colored(len(set(list_of_subdomains)), "yellow")))
+    print(" [*] {0}".format(colored("Search Completed", "cyan")))
+
     return(set(list_of_subdomains))
 
 
 def find_subdomains_censys(domain, api_id, api_secret):
-    print(colored('[*] Searching Censys for subdomains of %s' % domain,"yellow"))
+    print(colored('[*] Searching Censys...',"yellow"))
     try:
         censys_certificates = censys.certificates.CensysCertificates(api_id=api_id, api_secret=api_secret)
         certificate_query = 'parsed.names: %s' % domain
@@ -59,7 +60,7 @@ def find_subdomains_censys(domain, api_id, api_secret):
         for search_result in certificates_search_results:
             subdomains.extend(search_result['parsed.names'])
         
-        print("[*] {0}: {1}".format(colored("Unique subdomains found", "cyan"), colored(len(set(subdomains)), "yellow")))
+        print(" [*] {0}".format(colored("Search Completed", "cyan")))
         return set(subdomains)
 
     except censys.base.CensysUnauthorizedException:
@@ -75,8 +76,7 @@ def find_subdomains_censys(domain, api_id, api_secret):
 
 def find_subdomains_hacker_target(doamin):
     HT = []
-
-    print(colored("[*]-Searching HackerTarget...", "yellow"))
+    print(colored("\n[*] Searching HackerTarget...", "yellow"))
 
     url = "https://api.hackertarget.com/hostsearch/?q={0}".format(quote(domain))
     headers = {"user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:52.0) Gecko/20100101 Firefox/52.0"}
@@ -90,7 +90,7 @@ def find_subdomains_hacker_target(doamin):
                 HT.append(hostname)
 
         HT = set(HT)
-        print(" [*] {0}: {1}".format(colored("Unique subdomains found", "cyan"), colored(len(HT), "yellow")))
+        print(" [*] {0}".format(colored("Search Completed", "cyan")))
         return HT
 
     except requests.exceptions.RequestException as err:
@@ -117,7 +117,7 @@ def find_subdomains_hacker_target(doamin):
 def find_subdomains_threat_crowd(domain):
     TC = []
 
-    print(colored("[*]-Searching ThreatCrowd...", "yellow"))
+    print(colored("\n[*] Searching ThreatCrowd...", "yellow"))
 
     try:
         result = requests.get("https://www.threatcrowd.org/searchApi/v2/domain/report/", params={"domain": domain})
@@ -131,7 +131,7 @@ def find_subdomains_threat_crowd(domain):
                     TC.append(sd)
 
             TC = set(TC)
-            print(" [*] {0}: {1}".format(colored("Unique subdomains found", "cyan"), colored(len(TC), "yellow")))
+            print(" [*] {0}".format(colored("Search Completed", "cyan")))
             return TC
 
         except ValueError as errv:
@@ -161,7 +161,7 @@ def find_subdomains_threat_crowd(domain):
 
 # # Writing to file 
 def save_subdomains_to_file(name,domain,subdomains):
-    print(colored('\n[*] Saving %s subdomains into file' % name,"yellow"))
+    print(colored('\n[*] Saving subdomains into %s file' % name,"yellow"))
 
     parent_dir = os.path.dirname(os.path.abspath(__file__))
     path = os.path.join(parent_dir, 'outputs/')
@@ -184,17 +184,17 @@ def save_subdomains_to_file(name,domain,subdomains):
         for subdomain in subdomains:
             file1.write(str(subdomain)+'\n')
 
-    print(colored('[*] Saving %s Done' % name,"green"))
+    print(colored('[*] All Data Successfully written in %s' % filepath,"green"))
 
 def main(domain, censys_api_id, censys_api_secret):
-   
+    print(colored("[*] Searching Subdomains for {} ".format(domain) ,"green"))
     cert_subdomains = find_subdomains_cert(domain)
     censys_subdomains = find_subdomains_censys(domain, censys_api_id, censys_api_secret)
     hacker_target_subdomains = find_subdomains_hacker_target(domain)
     threat_crowd_subdomains = find_subdomains_threat_crowd(domain)
 
     uniq_subdomains = cert_subdomains | censys_subdomains | hacker_target_subdomains | threat_crowd_subdomains
-   
+    print(" [*] {0}: {1}".format(colored("Total Unique subdomains found", "green"), colored(len(set(uniq_subdomains)), "yellow")))
     save_subdomains_to_file("all_subdomains",domain,uniq_subdomains)
 
 
