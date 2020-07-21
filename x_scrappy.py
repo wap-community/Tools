@@ -73,7 +73,7 @@ def find_subdomains_censys(domain, api_id, api_secret):
         sys.stderr.write('[-] Something bad happened, ' + repr(e))
         return set(subdomains)
 
-def hacker_target(doamin):
+def find_subdomains_hacker_target(doamin):
     HT = []
 
     print(colored("[*]-Searching HackerTarget...", "yellow"))
@@ -200,7 +200,16 @@ def main(domain, censys_api_id, censys_api_secret):
 
 if __name__ == "__main__":
 
-    domain = sys.argv[1]
+    try:
+        domain = sys.argv[1]
+    except:
+        print('''
+
+        Usage: python3 x_scrappy.py domain\n
+        Example: python3 x_scrappy.py google.com
+        '''
+        )
+        sys.exit()
 
     censys_api_id = None
     censys_api_secret = None
@@ -209,8 +218,6 @@ if __name__ == "__main__":
     if 'CENSYS_API_ID' in os.environ and 'CENSYS_API_SECRET' in os.environ:
         censys_api_id = os.environ['CENSYS_API_ID']
         censys_api_secret = os.environ['CENSYS_API_SECRET']
-
-
 
     if None in [ censys_api_id, censys_api_secret ]:
         sys.stderr.write('[!] Please set your \n 1. Censys API ID and Censys Secret from your environment \n 2. Set this (CENSYS_API_ID and CENSYS_API_SECRET) variables\n using export VARIABLENAME="value" \n')
