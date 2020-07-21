@@ -200,6 +200,20 @@ def main(domain, censys_api_id, censys_api_secret):
 
 if __name__ == "__main__":
 
+    print(colored('''
+
+    ---------------------------------------------------------------------:
+    :                                                                    :
+    :                            {}                               :
+    :                                                                    :
+    :                         {}                       :
+    :                                                                    :
+    ---------------------------------------------------------------------:
+    
+    
+    
+    '''.format(colored("X Scrappy","cyan"),colored("The Subdomain Finder","green")),"yellow"))
+
     try:
         domain = sys.argv[1]
     except:
