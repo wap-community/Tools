@@ -87,7 +87,7 @@ python3 x_scrappy.py google.com
 ## Credits:
 
 ### Developed by
-[Altaf Shaikh](https://github.com/altaf99)<br>
+[Altaf Shaikh](https://github.com/altafshaikh)<br>
 [Email](mailto:iamaltafshaikh@gmail.com)
 
 ### Special Thanks
