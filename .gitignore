@@ -1,0 +1,4 @@
+env/*
+set_env_variables.txt
+outputs/*
+envvariable.sh
